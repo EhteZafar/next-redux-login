@@ -1,44 +1,41 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 
 type data = {
-    token ?: any;
+  token?: any;
 };
 
 const initialState = {
-    token: "",
+  token: "",
 } as data;
 
-function authen(email: string, password: string) {
-    console.log(email, password);
-    const token = axios.post("http://localhost:5000/api/auth/login", {
-        email,
-        password,
-    }).then((res) => {
-        // console.log(res.data.data.jwt);
-        return res.data.data.jwt;
-    }).catch((err) => {
-        console.log(err);
+export const login = createAsyncThunk(
+  "auth/login",
+  async (payload: { email: string; password: string }) => {
+    const res = await axios.post("http://localhost:5000/api/auth/login", {
+      email: payload.email,
+      password: payload.password,
     });
-    console.log("token", token);
-    return token;
-}
+    return res.data.data.jwt;
+  }
+);
 
-export const auth = createSlice({
-    name: "auth",
-    initialState,
-    reducers: {
-        login: (state, action: PayloadAction<{email: string, password: string }>) => {
-            const res = authen(action.payload.email, action.payload.password);
-            console.log("res", res);
-            if (res) {
-                state.token = res;
-            }
-            console.log("token", state.token);
-            // console.log(res);
-        },
+export const authSlice = createSlice({
+  name: "auth",
+  initialState,
+  reducers: {
+    login: (
+      state,
+      action: PayloadAction<{ email: string; password: string }>
+    ) => {
+      state.token = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(login.fulfilled, (state, action) => {
+      state.token = action.payload;
+    });
+  },
 });
-
-export const { login } = auth.actions;
-export default auth.reducer;
+export default authSlice.reducer;
+export const { login: loginAction } = authSlice.actions;

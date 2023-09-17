@@ -4,18 +4,9 @@ import NextAuth from "next-auth/next";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { login } from "@/redux/features/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-
-// const temp = () => {
-//     const token = useAppSelector((state) => state.authReducer.token);
-//     const dispatch = useAppDispatch();
-
-//     return dispatch(login({ email: "ehtesham", password: "123" }));
-    
-// }
+import { Temp } from "./temp";
 
 export const authOptions: NextAuthOptions = {
-
-
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -23,20 +14,20 @@ export const authOptions: NextAuthOptions = {
         username: { label: "Username", type: "text", placeholder: "jsmith" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials: { username: string; password: string; }) {
-        
-        // const res = await temp();
-        const user = { id: 1, name: "ehtesham", pass: "123" };
-        if (credentials.username === user.name && credentials.password === user.pass) {
-            return user;
-            } else {
-            return null;
-            }
+      async authorize(credentials: { username: string; password: string }) {
+        const { username, password } = credentials;
+        const token = await Temp(username, password);
+
+        if (token) {
+          return { token };
+        } else {
+          return null;
         }
+      },
     }),
-    ],
+  ],
 };
-    
+
 const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
